@@ -16,8 +16,9 @@
 				--success: #22c55e;
 				--shadow: 0 20px 55px rgba(0, 0, 0, 0.45);
 				--radius: 14px;
-				--font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji",
-					"Segoe UI Emoji";
+				--font:
+					ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, 'Apple Color Emoji',
+					'Segoe UI Emoji';
 			}
 
 			* {
@@ -31,7 +32,8 @@
 				margin: 0;
 				font-family: var(--font);
 				color: var(--text);
-				background: radial-gradient(1200px 600px at 30% 10%, rgba(79, 124, 255, 0.28), transparent 60%),
+				background:
+					radial-gradient(1200px 600px at 30% 10%, rgba(79, 124, 255, 0.28), transparent 60%),
 					radial-gradient(1000px 700px at 90% 20%, rgba(34, 197, 94, 0.14), transparent 60%),
 					linear-gradient(180deg, #070b14, var(--bg));
 			}
@@ -43,9 +45,11 @@
 				padding: 22px 14px;
 			}
 			.container {
-				width: min(520px, 94vw);
+				width: 100%;
+				max-width: 520px;
 			}
 			.card {
+				width: 100%;
 				background: var(--card);
 				border: 1px solid var(--card-border);
 				border-radius: var(--radius);
@@ -75,7 +79,7 @@
 				transform-origin: center;
 			}
 			.camera-container {
-				width: 90vw;
+				width: min(100%, 380px);
 				max-width: 380px;
 				aspect-ratio: 3 / 4;
 				border-radius: 12px;
@@ -93,7 +97,7 @@
 
 			.img-preview {
 				width: 100%;
-				max-width: 22.86rem;
+				max-width: 100%;
 				overflow: hidden;
 				display: flex;
 				justify-content: center;
@@ -199,7 +203,7 @@
 				background: rgba(0, 0, 0, 0.45);
 				z-index: 1500;
 			}
-			.spinner-backdrop[data-open="true"] {
+			.spinner-backdrop[data-open='true'] {
 				display: flex;
 			}
 			.spinner-card {
@@ -237,6 +241,26 @@
 				color: var(--muted);
 				margin-top: 10px;
 				text-align: center;
+			}
+
+			#captureArea {
+				width: 100%;
+				overflow-x: hidden;
+			}
+
+			@media (max-width: 480px) {
+				.page {
+					padding: 14px 8px;
+				}
+				.card {
+					padding: 14px;
+				}
+				.actions {
+					gap: 8px;
+				}
+				button {
+					max-width: 100%;
+				}
 			}
 		</style>
 	</head>
@@ -296,103 +320,87 @@
 			/**
 			 * Standalone version of Angular `liveliness-media-collection`.
 			 *
-			 * Expected URL parameters (replace Angular route params/query params):
-			 * - journeyId: the journey UUID (Angular used path param `:journeyId`)
-			 * - UserToken: token (Angular used query param `UserToken`)
+			 * Expected URL parameters:
+			 * - `journeyId`: standalone replacement for Angular route param `:journeyId`
+			 * - `UserToken`: same query param the Angular page uses
 			 *
-			 * Example:
-			 *   file:///.../liveliness-media-collection.raw.html?journeyId=<UUID>&UserToken=<TOKEN>
-			 *
-			 * Configure endpoints below. If your app normally injects `window.__env.config`,
-			 * you can also set it before this script runs.
+			 * Optional external globals before this script runs:
+			 * - `window.__env.config`: same object shape your app uses from appsettings.js
+			 * - `window.__TW_SERVICE_URLS`: direct overrides, e.g. `{ SER31_Outreach: "..." }`
 			 */
 
 			const DEFAULT_CONFIG = {
-				isOutreachApplication: false,
-				whatsAppRedirectMobileNumber: "",
+				SER31_Outreach: 'https://diykyc-sb-old.trackwizz.com',
+				whatsAppRedirectMobileNumber: '',
 
-				// Set these for your environment
-				unassistedKycBaseUrl: "", // e.g. "https://api.example.com/unassisted-kyc"
-				outreachBaseUrl: "", // e.g. "https://api.example.com/outreach"
+				// Outreach endpoint
+				saveMediaOutreachUrl: '/webhook/liveliness',
 
-				// Paths taken from the Angular service
-				kycJourneyEndPointUrl: "/journey",
-				saveMediaUrl: "/doc/liveness",
-				saveMediaOutreachUrl: "/webhook/liveliness",
-
-				// Header value the Angular app uses
-				clusterHeaderValue: "CL1_User",
-
-				// Default fallback if non-outreach
-				defaultWhatsAppNumber: "9136693465"
+				// Values mirrored from shared configuration enums
+				clusterHeaderValue: 'CL1_User',
+				outreachBasePath: '/outreach/api',
+				defaultWhatsAppNumber: '9136693465'
 			};
 
-			const appSettings = (window.__env && window.__env.config) || DEFAULT_CONFIG;
+			const appSettings = Object.assign({}, DEFAULT_CONFIG, (window.__env && window.__env.config) || {});
 
 			const els = {
-				helloText: document.getElementById("helloText"),
-				hintText: document.getElementById("hintText"),
-				errorText: document.getElementById("errorText"),
-				metaText: document.getElementById("metaText"),
-				cameraBlock: document.getElementById("cameraBlock"),
-				previewBlock: document.getElementById("previewBlock"),
-				video: document.getElementById("video"),
-				previewImg: document.getElementById("previewImg"),
-				btnCapture: document.getElementById("btnCapture"),
-				btnRetake: document.getElementById("btnRetake"),
-				btnSubmit: document.getElementById("btnSubmit"),
-				btnWhatsApp: document.getElementById("btnWhatsApp"),
-				screenCapture: document.getElementById("screen-capture"),
-				screenSuccess: document.getElementById("screen-success"),
-				successText: document.getElementById("successText"),
-				toastHost: document.getElementById("toastHost"),
-				spinner: document.getElementById("spinner"),
-				spinnerMessage: document.getElementById("spinnerMessage")
+				helloText: document.getElementById('helloText'),
+				hintText: document.getElementById('hintText'),
+				errorText: document.getElementById('errorText'),
+				metaText: document.getElementById('metaText'),
+				cameraBlock: document.getElementById('cameraBlock'),
+				previewBlock: document.getElementById('previewBlock'),
+				video: document.getElementById('video'),
+				previewImg: document.getElementById('previewImg'),
+				btnCapture: document.getElementById('btnCapture'),
+				btnRetake: document.getElementById('btnRetake'),
+				btnSubmit: document.getElementById('btnSubmit'),
+				btnWhatsApp: document.getElementById('btnWhatsApp'),
+				screenCapture: document.getElementById('screen-capture'),
+				screenSuccess: document.getElementById('screen-success'),
+				successText: document.getElementById('successText'),
+				toastHost: document.getElementById('toastHost'),
+				spinner: document.getElementById('spinner'),
+				spinnerMessage: document.getElementById('spinnerMessage')
 			};
 
 			const state = {
-				journeyId: "",
-				journeyToken: "",
-				journeyData: null,
+				journeyId: '',
+				journeyToken: '',
 				isMobile: false,
 				latitude: null,
 				longitude: null,
 				selectedImageDataUrl: null,
 				selfieResponse: false,
-				mediaStream: null
+				mediaStream: null,
+				serviceUrls: {
+					SER31_Outreach: ''
+				},
+				csrfToken: ''
 			};
-
-			function titleCase(s) {
-				if (!s) return "";
-				return String(s)
-					.toLowerCase()
-					.split(" ")
-					.filter(Boolean)
-					.map((w) => w[0].toUpperCase() + w.slice(1))
-					.join(" ");
-			}
 
 			function setError(message) {
 				if (!message) {
-					els.errorText.style.display = "none";
-					els.errorText.textContent = "";
+					els.errorText.style.display = 'none';
+					els.errorText.textContent = '';
 					return;
 				}
-				els.errorText.style.display = "block";
+				els.errorText.style.display = 'block';
 				els.errorText.textContent = message;
 			}
 
 			function showSpinner(show, message) {
-				els.spinner.dataset.open = show ? "true" : "false";
+				els.spinner.dataset.open = show ? 'true' : 'false';
 				if (message) els.spinnerMessage.textContent = message;
 			}
 
 			function toast(kind, title, detail, lifeMs = 4000) {
-				const node = document.createElement("div");
-				node.className = `toast ${kind || ""}`;
+				const node = document.createElement('div');
+				node.className = `toast ${kind || ''}`;
 				node.innerHTML = `<p class="title"></p><p class="detail"></p>`;
-				node.querySelector(".title").textContent = title || "";
-				node.querySelector(".detail").textContent = detail || "";
+				node.querySelector('.title').textContent = title || '';
+				node.querySelector('.detail').textContent = detail || '';
 				els.toastHost.appendChild(node);
 				setTimeout(() => node.remove(), lifeMs);
 			}
@@ -403,33 +411,113 @@
 			}
 
 			function qs(name) {
-				return new URLSearchParams(window.location.search).get(name) || "";
+				return new URLSearchParams(window.location.search).get(name) || '';
 			}
 
-			function buildUrl(baseUrl, path) {
-				if (!baseUrl) return path; // allow relative
-				return String(baseUrl).replace(/\/+$/, "") + "/" + String(path || "").replace(/^\/+/, "");
+			function buildServiceUrl(baseUrl) {
+				const segments = Array.prototype.slice
+					.call(arguments, 1)
+					.map((segment) => String(segment == null ? '' : segment).replace(/^\/+|\/+$/g, ''))
+					.filter(Boolean);
+				const base = String(baseUrl || '').replace(/\/+$/g, '');
+				return [base, ...segments].filter(Boolean).join('/');
 			}
 
-			function commonHeaders() {
-				const headers = {
-					"Content-Type": "application/json",
-					Cluster: appSettings.clusterHeaderValue || "CL1_User"
+			function withQuery(url, params) {
+				const u = new URL(url, window.location.href);
+				Object.keys(params || {}).forEach((key) => {
+					const value = params[key];
+					if (value !== undefined && value !== null && value !== '') {
+						u.searchParams.set(key, value);
+					}
+				});
+				return u.toString();
+			}
+
+			function resolveDirectServiceUrls() {
+				const overrides = window.__TW_SERVICE_URLS || {};
+				return {
+					SER31_Outreach: overrides.SER31_Outreach || appSettings.SER31_Outreach || ''
 				};
-				if (state.journeyToken) headers["UserToken"] = state.journeyToken;
+			}
+
+			function hydrateServiceUrls() {
+				const direct = resolveDirectServiceUrls();
+				state.serviceUrls = direct;
+			}
+
+			function getOutreachUrl(path) {
+				return buildServiceUrl(state.serviceUrls.SER31_Outreach, appSettings.outreachBasePath, path);
+			}
+
+			function readCookie(name) {
+				const tokenizedCookie = `; ${document.cookie || ''}`;
+				const parts = tokenizedCookie.split(`; ${name}=`);
+				if (parts.length === 2) return parts.pop().split(';').shift() || '';
+				return '';
+			}
+
+			function getCsrfToken() {
+				return state.csrfToken || readCookie('XSRF-TOKEN') || '';
+			}
+
+			function setCsrfTokenFromResponse(res) {
+				const latestCsrfToken = res && res.headers ? res.headers.get('XSRF-TOKEN') : '';
+				if (latestCsrfToken) state.csrfToken = latestCsrfToken;
+			}
+
+			function includeDomainHeader() {
+				return !!(appSettings.IncludeDomainInHeader ?? appSettings.includeDomainInHeader);
+			}
+
+			function buildHeaders(url, options) {
+				const opts = options || {};
+				const headers = {
+					Cluster: appSettings.clusterHeaderValue || 'CL1_User'
+				};
+
+				if (opts.includeJsonHeaders) headers['Content-Type'] = 'application/json';
+				if (opts.includeAcceptJson) headers['Accept'] = 'application/json';
+				if (opts.includeCorrelationId) {
+					headers['X-Correlation-ID'] =
+						(window.crypto && crypto.randomUUID && crypto.randomUUID()) || String(Date.now());
+				}
+				if (opts.includeUserToken !== false && state.journeyToken) headers['UserToken'] = state.journeyToken;
+				if (includeDomainHeader()) headers['Domain'] = url || '';
+
+				const antiForgeryToken = getCsrfToken();
+				if (antiForgeryToken) headers['X-XSRF-Token'] = antiForgeryToken;
+
 				return headers;
+			}
+
+			async function requestJson(url, options) {
+				const opts = options || {};
+				const response = await fetch(url, {
+					method: opts.method || 'GET',
+					credentials: 'include',
+					headers: buildHeaders(url, {
+						includeJsonHeaders: opts.includeJsonHeaders,
+						includeAcceptJson: opts.includeAcceptJson,
+						includeCorrelationId: opts.includeCorrelationId,
+						includeUserToken: opts.includeUserToken
+					}),
+					body: opts.body
+				});
+				setCsrfTokenFromResponse(response);
+				return response;
 			}
 
 			async function openCamera() {
 				try {
-					state.mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+					state.mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
 					els.video.srcObject = state.mediaStream;
 					await els.video.play();
-					setError("");
+					setError('');
 				} catch (err) {
-					console.error("Error accessing the camera:", err);
+					console.error('Error accessing the camera:', err);
 					setError(
-						"Camera access is blocked for this site. Please enable camera permission in your browser settings and reload the page."
+						'Camera access is blocked for this site. Please enable camera permission in your browser settings and reload the page.'
 					);
 				}
 			}
@@ -444,21 +532,21 @@
 			function captureImage() {
 				const v = els.video;
 				if (!v.videoWidth || !v.videoHeight) {
-					toast("warn", "Camera not ready", "Please wait a moment and try again.");
+					toast('warn', 'Camera not ready', 'Please wait a moment and try again.');
 					return;
 				}
 
-				const canvas = document.createElement("canvas");
+				const canvas = document.createElement('canvas');
 				canvas.width = v.videoWidth;
 				canvas.height = v.videoHeight;
-				const ctx = canvas.getContext("2d");
+				const ctx = canvas.getContext('2d');
 
 				// Flip horizontally to match preview in Angular version
 				ctx.translate(canvas.width, 0);
 				ctx.scale(-1, 1);
 				ctx.drawImage(v, 0, 0, canvas.width, canvas.height);
 
-				state.selectedImageDataUrl = canvas.toDataURL("image/jpeg");
+				state.selectedImageDataUrl = canvas.toDataURL('image/jpeg');
 				stopCameraStream();
 				render();
 			}
@@ -471,7 +559,7 @@
 
 			function requestLocation() {
 				if (!navigator.geolocation) {
-					toast("warn", "Geolocation", "Geolocation is not supported by this browser.");
+					toast('warn', 'Geolocation', 'Geolocation is not supported by this browser.');
 					return;
 				}
 
@@ -482,75 +570,65 @@
 						renderMeta();
 					},
 					(err) => {
-						let msg = "An unknown error occurred.";
-						if (err.code === err.PERMISSION_DENIED) msg = "Permission is Required";
-						else if (err.code === err.POSITION_UNAVAILABLE) msg = "Location information is unavailable.";
-						else if (err.code === err.TIMEOUT) msg = "The request to get user location timed out.";
-						toast("error", "Location", msg);
+						let msg = 'An unknown error occurred.';
+						if (err.code === err.PERMISSION_DENIED) msg = 'Permission is Required';
+						else if (err.code === err.POSITION_UNAVAILABLE) msg = 'Location information is unavailable.';
+						else if (err.code === err.TIMEOUT) msg = 'The request to get user location timed out.';
+						toast('error', 'Location', msg);
 					},
 					{ enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
 				);
 			}
 
-			async function getJourneyInfo() {
-				if (!state.journeyId) return;
-				const base = appSettings.unassistedKycBaseUrl || "";
-				const url = buildUrl(base, appSettings.kycJourneyEndPointUrl || "/journey");
-				const withParams = url + (url.includes("?") ? "&" : "?") + "link=" + encodeURIComponent(state.journeyId);
-
-				showSpinner(true, "Loading ...");
-				try {
-					const res = await fetch(withParams, { method: "GET", headers: commonHeaders() });
-					const data = await res.json().catch(() => null);
-					state.journeyData = data;
-				} catch (e) {
-					console.error(e);
-				} finally {
-					showSpinner(false);
-					render();
-				}
-			}
-
 			async function submit() {
 				if (!state.selectedImageDataUrl) {
-					toast("warn", "No Image", "Please capture a selfie first.");
+					toast('warn', 'No Image', 'Please capture a selfie first.');
 					return;
 				}
 				if (!state.journeyId) {
-					toast("error", "Missing journeyId", "Provide ?journeyId=... in the URL.");
+					toast('error', 'Missing journeyId', 'Provide ?journeyId=... in the URL.');
 					return;
 				}
 
 				const payload = {
-					mediaData: String(state.selectedImageDataUrl).split(",")[1],
+					mediaData: String(state.selectedImageDataUrl).split(',')[1],
 					userUUID: state.journeyId,
-					mimeType: "image/jpeg",
-					stepCode: "STEP3",
+					mimeType: 'image/jpeg',
+					stepCode: 'STEP3',
 					latitude: state.latitude,
 					longitude: state.longitude
 				};
 
-				const isOutreach = !!appSettings.isOutreachApplication;
-				const base = isOutreach ? appSettings.outreachBaseUrl || "" : appSettings.unassistedKycBaseUrl || "";
-				const path = isOutreach ? appSettings.saveMediaOutreachUrl || "/webhook/liveliness" : appSettings.saveMediaUrl || "/doc/liveness";
-				const url = buildUrl(base, path);
+				const url = getOutreachUrl(appSettings.saveMediaOutreachUrl || '/webhook/liveliness');
+				if (!url) {
+					toast('error', 'Configuration', 'Outreach service URL is not available.');
+					return;
+				}
 
-				showSpinner(true, "Saving ...");
+				showSpinner(true, 'Saving ...');
 				try {
-					const res = await fetch(url, { method: "PUT", headers: commonHeaders(), body: JSON.stringify(payload) });
+					const res = await requestJson(url, {
+						method: 'PUT',
+						includeJsonHeaders: true,
+						body: JSON.stringify(payload)
+					});
 					const body = await res.json().catch(() => null);
 
 					// Angular logic: treat missing success / 302 without data as error
 					const ok = body && body.success && !(body.code === 302 && !body.data);
 					if (!ok) {
-						toast("error", body && (body.status || body.code || "Error"), body && body.message ? body.message : "Upload failed.");
+						toast(
+							'error',
+							body && (body.status || body.code || 'Error'),
+							body && body.message ? body.message : 'Upload failed.'
+						);
 						state.selfieResponse = false;
 					} else {
 						state.selfieResponse = true;
 					}
 				} catch (e) {
 					console.error(e);
-					toast("error", "Error", "Upload failed.");
+					toast('error', 'Error', 'Upload failed.');
 					state.selfieResponse = false;
 				} finally {
 					showSpinner(false);
@@ -559,63 +637,67 @@
 			}
 
 			function navigateToWhatsApp() {
-				const number = appSettings.isOutreachApplication
-					? appSettings.whatsAppRedirectMobileNumber || ""
-					: appSettings.defaultWhatsAppNumber || "9136693465";
-				window.location.href = "https://wa.me/" + encodeURIComponent(number);
+				const number = appSettings.whatsAppRedirectMobileNumber || appSettings.defaultWhatsAppNumber || '9136693465';
+				window.location.href = 'https://wa.me/' + encodeURIComponent(number);
 			}
 
 			function renderMeta() {
 				const parts = [];
 				if (state.latitude && state.longitude) parts.push(`Location: ${state.latitude}, ${state.longitude}`);
 				if (state.journeyId) parts.push(`journeyId: ${state.journeyId}`);
-				els.metaText.textContent = parts.join(" • ");
+				if (state.serviceUrls.SER31_Outreach) parts.push('service config loaded');
+				els.metaText.textContent = parts.join(' • ');
 			}
 
 			function render() {
-				const name = state.journeyData && state.journeyData.name ? titleCase(state.journeyData.name) : "";
-				els.helloText.textContent = name ? `Hello ${name}` : "Hello";
+				els.helloText.textContent = 'Hello';
 
 				if (state.isMobile) {
-					els.hintText.style.display = "block";
+					els.hintText.style.display = 'block';
 				} else {
-					els.hintText.style.display = "none";
+					els.hintText.style.display = 'none';
 				}
 
 				renderMeta();
 
 				if (state.selfieResponse) {
-					els.screenCapture.style.display = "none";
-					els.screenSuccess.style.display = "block";
-					els.successText.textContent = appSettings.isOutreachApplication
-						? "Your selfie has been captured. We will notify you on WhatsApp once the upload is verified."
-						: `Congratulation ${name || ""}, Your photo has been uploaded successfully!`;
+					els.screenCapture.style.display = 'none';
+					els.screenSuccess.style.display = 'block';
+					els.successText.textContent =
+						'Your selfie has been captured. We will notify you on WhatsApp once the upload is verified.';
 					return;
 				}
 
-				els.screenCapture.style.display = "block";
-				els.screenSuccess.style.display = "none";
+				els.screenCapture.style.display = 'block';
+				els.screenSuccess.style.display = 'none';
 
 				const hasImg = !!state.selectedImageDataUrl;
-				els.cameraBlock.style.display = hasImg ? "none" : "block";
-				els.previewBlock.style.display = hasImg ? "block" : "none";
+				els.cameraBlock.style.display = hasImg ? 'none' : 'block';
+				els.previewBlock.style.display = hasImg ? 'block' : 'none';
 				if (hasImg) els.previewImg.src = state.selectedImageDataUrl;
 			}
 
-			function init() {
-				state.journeyId = qs("journeyId");
-				state.journeyToken = qs("UserToken");
+			async function init() {
+				state.journeyId = qs('journeyId');
+				state.journeyToken = qs('UserToken');
 				state.isMobile = detectMobile();
 
-				els.btnCapture.addEventListener("click", captureImage);
-				els.btnRetake.addEventListener("click", retake);
-				els.btnSubmit.addEventListener("click", submit);
-				els.btnWhatsApp.addEventListener("click", navigateToWhatsApp);
+				els.btnCapture.addEventListener('click', captureImage);
+				els.btnRetake.addEventListener('click', retake);
+				els.btnSubmit.addEventListener('click', submit);
+				els.btnWhatsApp.addEventListener('click', navigateToWhatsApp);
 
 				render();
+				hydrateServiceUrls();
+				if (!state.serviceUrls.SER31_Outreach) {
+					toast(
+						'warn',
+						'Configuration missing',
+						'Provide SER31_Outreach in window.__env.config or window.__TW_SERVICE_URLS.'
+					);
+				}
 				openCamera();
 				requestLocation();
-				getJourneyInfo();
 			}
 
 			init();
