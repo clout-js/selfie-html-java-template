@@ -1,0 +1,624 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Liveliness Media Collection</title>
+		<style>
+			:root {
+				--bg: #0b1220;
+				--card: rgba(255, 255, 255, 0.06);
+				--card-border: rgba(255, 255, 255, 0.12);
+				--text: rgba(255, 255, 255, 0.92);
+				--muted: rgba(255, 255, 255, 0.72);
+				--danger: #ff5a67;
+				--primary: #4f7cff;
+				--success: #22c55e;
+				--shadow: 0 20px 55px rgba(0, 0, 0, 0.45);
+				--radius: 14px;
+				--font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji",
+					"Segoe UI Emoji";
+			}
+
+			* {
+				box-sizing: border-box;
+			}
+			html,
+			body {
+				height: 100%;
+			}
+			body {
+				margin: 0;
+				font-family: var(--font);
+				color: var(--text);
+				background: radial-gradient(1200px 600px at 30% 10%, rgba(79, 124, 255, 0.28), transparent 60%),
+					radial-gradient(1000px 700px at 90% 20%, rgba(34, 197, 94, 0.14), transparent 60%),
+					linear-gradient(180deg, #070b14, var(--bg));
+			}
+
+			.page {
+				min-height: 100%;
+				display: grid;
+				place-items: center;
+				padding: 22px 14px;
+			}
+			.container {
+				width: min(520px, 94vw);
+			}
+			.card {
+				background: var(--card);
+				border: 1px solid var(--card-border);
+				border-radius: var(--radius);
+				box-shadow: var(--shadow);
+				padding: 18px;
+				backdrop-filter: blur(10px);
+			}
+
+			.h1 {
+				font-size: 22px;
+				line-height: 1.25;
+				font-weight: 650;
+				margin: 0 0 6px;
+				text-align: center;
+				letter-spacing: 0.1px;
+			}
+			.subtle {
+				margin: 0 0 16px;
+				text-align: center;
+				color: var(--muted);
+				font-size: 13.5px;
+			}
+
+			/* Mirrors the Angular SCSS intent */
+			video {
+				transform: scaleX(-1);
+				transform-origin: center;
+			}
+			.camera-container {
+				width: 90vw;
+				max-width: 380px;
+				aspect-ratio: 3 / 4;
+				border-radius: 12px;
+				overflow: hidden;
+				margin: 0 auto;
+				border: 1px solid var(--card-border);
+				background: rgba(0, 0, 0, 0.25);
+			}
+			.camera-container video {
+				width: 100%;
+				height: 100%;
+				object-fit: cover;
+				display: block;
+			}
+
+			.img-preview {
+				width: 100%;
+				max-width: 22.86rem;
+				overflow: hidden;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				margin: 0 auto;
+				border-radius: 12px;
+				border: 1px solid var(--card-border);
+				background: rgba(0, 0, 0, 0.18);
+				padding: 10px;
+			}
+			.img-preview img {
+				max-height: 28.57rem;
+				max-width: 100%;
+				object-fit: contain;
+				border-radius: 10px;
+				display: block;
+			}
+
+			.actions {
+				display: flex;
+				justify-content: center;
+				gap: 10px;
+				margin-top: 14px;
+				flex-wrap: wrap;
+			}
+			button {
+				appearance: none;
+				border: 1px solid transparent;
+				border-radius: 12px;
+				padding: 10px 14px;
+				font-weight: 600;
+				cursor: pointer;
+				color: white;
+				background: var(--primary);
+				box-shadow: 0 10px 26px rgba(79, 124, 255, 0.25);
+			}
+			button.secondary {
+				background: transparent;
+				border-color: rgba(255, 255, 255, 0.22);
+				color: var(--text);
+				box-shadow: none;
+			}
+			button.success {
+				background: rgba(34, 197, 94, 0.9);
+				box-shadow: 0 10px 26px rgba(34, 197, 94, 0.18);
+			}
+			button:disabled {
+				opacity: 0.6;
+				cursor: not-allowed;
+			}
+
+			.error {
+				margin: 14px auto 0;
+				text-align: center;
+				color: var(--danger);
+				font-size: 13.5px;
+				max-width: 28rem;
+			}
+
+			.toast-host {
+				position: fixed;
+				right: 16px;
+				bottom: 16px;
+				display: grid;
+				gap: 10px;
+				z-index: 2000;
+			}
+			.toast {
+				min-width: 260px;
+				max-width: 360px;
+				padding: 10px 12px;
+				border-radius: 12px;
+				border: 1px solid rgba(255, 255, 255, 0.16);
+				background: rgba(20, 24, 36, 0.92);
+				box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+			}
+			.toast .title {
+				font-weight: 650;
+				margin: 0 0 2px;
+				font-size: 13.5px;
+			}
+			.toast .detail {
+				margin: 0;
+				color: var(--muted);
+				font-size: 12.5px;
+			}
+			.toast.error {
+				border-color: rgba(255, 90, 103, 0.35);
+			}
+			.toast.warn {
+				border-color: rgba(245, 158, 11, 0.35);
+			}
+			.toast.success {
+				border-color: rgba(34, 197, 94, 0.35);
+			}
+
+			.spinner-backdrop {
+				position: fixed;
+				inset: 0;
+				display: none;
+				align-items: center;
+				justify-content: center;
+				background: rgba(0, 0, 0, 0.45);
+				z-index: 1500;
+			}
+			.spinner-backdrop[data-open="true"] {
+				display: flex;
+			}
+			.spinner-card {
+				background: rgba(20, 24, 36, 0.92);
+				border: 1px solid rgba(255, 255, 255, 0.16);
+				border-radius: 14px;
+				padding: 14px 14px 12px;
+				min-width: min(340px, 90vw);
+				box-shadow: 0 20px 55px rgba(0, 0, 0, 0.55);
+				display: flex;
+				gap: 12px;
+				align-items: center;
+			}
+			.spinner {
+				width: 22px;
+				height: 22px;
+				border-radius: 999px;
+				border: 3px solid rgba(255, 255, 255, 0.18);
+				border-top-color: rgba(255, 255, 255, 0.85);
+				animation: spin 0.9s linear infinite;
+				flex: 0 0 auto;
+			}
+			@keyframes spin {
+				to {
+					transform: rotate(360deg);
+				}
+			}
+			.spinner-message {
+				color: var(--muted);
+				font-size: 13.5px;
+			}
+
+			.small {
+				font-size: 12px;
+				color: var(--muted);
+				margin-top: 10px;
+				text-align: center;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="page">
+			<div class="container">
+				<div class="card" id="screen-capture">
+					<div class="mb-5">
+						<p class="h1" id="helloText">Hello</p>
+						<p class="subtle" id="hintText" style="display: none">Please click on below image to capture photo</p>
+					</div>
+
+					<div id="captureArea">
+						<div id="cameraBlock">
+							<div class="camera-container">
+								<video id="video" autoplay playsinline muted></video>
+							</div>
+							<div class="actions">
+								<button type="button" id="btnCapture">Capture</button>
+							</div>
+						</div>
+
+						<div id="previewBlock" style="display: none">
+							<div class="img-preview">
+								<img id="previewImg" alt="Captured image" />
+							</div>
+							<div class="actions">
+								<button type="button" class="secondary" id="btnRetake">Retake</button>
+								<button type="button" id="btnSubmit">Submit</button>
+							</div>
+						</div>
+
+						<p class="error" id="errorText" style="display: none"></p>
+						<p class="small" id="metaText"></p>
+					</div>
+				</div>
+
+				<div class="card" id="screen-success" style="display: none">
+					<p class="h1" id="successText"></p>
+					<div class="actions">
+						<button type="button" class="secondary success" id="btnWhatsApp">Go Back To Chat</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="toast-host" id="toastHost" aria-live="polite" aria-atomic="true"></div>
+
+		<div class="spinner-backdrop" id="spinner" data-open="false" role="status" aria-live="polite" aria-busy="true">
+			<div class="spinner-card">
+				<div class="spinner"></div>
+				<div class="spinner-message" id="spinnerMessage">Loading…</div>
+			</div>
+		</div>
+
+		<script>
+			/**
+			 * Standalone version of Angular `liveliness-media-collection`.
+			 *
+			 * Expected URL parameters (replace Angular route params/query params):
+			 * - journeyId: the journey UUID (Angular used path param `:journeyId`)
+			 * - UserToken: token (Angular used query param `UserToken`)
+			 *
+			 * Example:
+			 *   file:///.../liveliness-media-collection.raw.html?journeyId=<UUID>&UserToken=<TOKEN>
+			 *
+			 * Configure endpoints below. If your app normally injects `window.__env.config`,
+			 * you can also set it before this script runs.
+			 */
+
+			const DEFAULT_CONFIG = {
+				isOutreachApplication: false,
+				whatsAppRedirectMobileNumber: "",
+
+				// Set these for your environment
+				unassistedKycBaseUrl: "", // e.g. "https://api.example.com/unassisted-kyc"
+				outreachBaseUrl: "", // e.g. "https://api.example.com/outreach"
+
+				// Paths taken from the Angular service
+				kycJourneyEndPointUrl: "/journey",
+				saveMediaUrl: "/doc/liveness",
+				saveMediaOutreachUrl: "/webhook/liveliness",
+
+				// Header value the Angular app uses
+				clusterHeaderValue: "CL1_User",
+
+				// Default fallback if non-outreach
+				defaultWhatsAppNumber: "9136693465"
+			};
+
+			const appSettings = (window.__env && window.__env.config) || DEFAULT_CONFIG;
+
+			const els = {
+				helloText: document.getElementById("helloText"),
+				hintText: document.getElementById("hintText"),
+				errorText: document.getElementById("errorText"),
+				metaText: document.getElementById("metaText"),
+				cameraBlock: document.getElementById("cameraBlock"),
+				previewBlock: document.getElementById("previewBlock"),
+				video: document.getElementById("video"),
+				previewImg: document.getElementById("previewImg"),
+				btnCapture: document.getElementById("btnCapture"),
+				btnRetake: document.getElementById("btnRetake"),
+				btnSubmit: document.getElementById("btnSubmit"),
+				btnWhatsApp: document.getElementById("btnWhatsApp"),
+				screenCapture: document.getElementById("screen-capture"),
+				screenSuccess: document.getElementById("screen-success"),
+				successText: document.getElementById("successText"),
+				toastHost: document.getElementById("toastHost"),
+				spinner: document.getElementById("spinner"),
+				spinnerMessage: document.getElementById("spinnerMessage")
+			};
+
+			const state = {
+				journeyId: "",
+				journeyToken: "",
+				journeyData: null,
+				isMobile: false,
+				latitude: null,
+				longitude: null,
+				selectedImageDataUrl: null,
+				selfieResponse: false,
+				mediaStream: null
+			};
+
+			function titleCase(s) {
+				if (!s) return "";
+				return String(s)
+					.toLowerCase()
+					.split(" ")
+					.filter(Boolean)
+					.map((w) => w[0].toUpperCase() + w.slice(1))
+					.join(" ");
+			}
+
+			function setError(message) {
+				if (!message) {
+					els.errorText.style.display = "none";
+					els.errorText.textContent = "";
+					return;
+				}
+				els.errorText.style.display = "block";
+				els.errorText.textContent = message;
+			}
+
+			function showSpinner(show, message) {
+				els.spinner.dataset.open = show ? "true" : "false";
+				if (message) els.spinnerMessage.textContent = message;
+			}
+
+			function toast(kind, title, detail, lifeMs = 4000) {
+				const node = document.createElement("div");
+				node.className = `toast ${kind || ""}`;
+				node.innerHTML = `<p class="title"></p><p class="detail"></p>`;
+				node.querySelector(".title").textContent = title || "";
+				node.querySelector(".detail").textContent = detail || "";
+				els.toastHost.appendChild(node);
+				setTimeout(() => node.remove(), lifeMs);
+			}
+
+			function detectMobile() {
+				const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+				return /android|iPad|iPhone|iPod/i.test(userAgent);
+			}
+
+			function qs(name) {
+				return new URLSearchParams(window.location.search).get(name) || "";
+			}
+
+			function buildUrl(baseUrl, path) {
+				if (!baseUrl) return path; // allow relative
+				return String(baseUrl).replace(/\/+$/, "") + "/" + String(path || "").replace(/^\/+/, "");
+			}
+
+			function commonHeaders() {
+				const headers = {
+					"Content-Type": "application/json",
+					Cluster: appSettings.clusterHeaderValue || "CL1_User"
+				};
+				if (state.journeyToken) headers["UserToken"] = state.journeyToken;
+				return headers;
+			}
+
+			async function openCamera() {
+				try {
+					state.mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+					els.video.srcObject = state.mediaStream;
+					await els.video.play();
+					setError("");
+				} catch (err) {
+					console.error("Error accessing the camera:", err);
+					setError(
+						"Camera access is blocked for this site. Please enable camera permission in your browser settings and reload the page."
+					);
+				}
+			}
+
+			function stopCameraStream() {
+				if (state.mediaStream) {
+					state.mediaStream.getTracks().forEach((t) => t.stop());
+					state.mediaStream = null;
+				}
+			}
+
+			function captureImage() {
+				const v = els.video;
+				if (!v.videoWidth || !v.videoHeight) {
+					toast("warn", "Camera not ready", "Please wait a moment and try again.");
+					return;
+				}
+
+				const canvas = document.createElement("canvas");
+				canvas.width = v.videoWidth;
+				canvas.height = v.videoHeight;
+				const ctx = canvas.getContext("2d");
+
+				// Flip horizontally to match preview in Angular version
+				ctx.translate(canvas.width, 0);
+				ctx.scale(-1, 1);
+				ctx.drawImage(v, 0, 0, canvas.width, canvas.height);
+
+				state.selectedImageDataUrl = canvas.toDataURL("image/jpeg");
+				stopCameraStream();
+				render();
+			}
+
+			function retake() {
+				state.selectedImageDataUrl = null;
+				render();
+				openCamera();
+			}
+
+			function requestLocation() {
+				if (!navigator.geolocation) {
+					toast("warn", "Geolocation", "Geolocation is not supported by this browser.");
+					return;
+				}
+
+				navigator.geolocation.getCurrentPosition(
+					(pos) => {
+						state.latitude = String(pos.coords.latitude);
+						state.longitude = String(pos.coords.longitude);
+						renderMeta();
+					},
+					(err) => {
+						let msg = "An unknown error occurred.";
+						if (err.code === err.PERMISSION_DENIED) msg = "Permission is Required";
+						else if (err.code === err.POSITION_UNAVAILABLE) msg = "Location information is unavailable.";
+						else if (err.code === err.TIMEOUT) msg = "The request to get user location timed out.";
+						toast("error", "Location", msg);
+					},
+					{ enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+				);
+			}
+
+			async function getJourneyInfo() {
+				if (!state.journeyId) return;
+				const base = appSettings.unassistedKycBaseUrl || "";
+				const url = buildUrl(base, appSettings.kycJourneyEndPointUrl || "/journey");
+				const withParams = url + (url.includes("?") ? "&" : "?") + "link=" + encodeURIComponent(state.journeyId);
+
+				showSpinner(true, "Loading ...");
+				try {
+					const res = await fetch(withParams, { method: "GET", headers: commonHeaders() });
+					const data = await res.json().catch(() => null);
+					state.journeyData = data;
+				} catch (e) {
+					console.error(e);
+				} finally {
+					showSpinner(false);
+					render();
+				}
+			}
+
+			async function submit() {
+				if (!state.selectedImageDataUrl) {
+					toast("warn", "No Image", "Please capture a selfie first.");
+					return;
+				}
+				if (!state.journeyId) {
+					toast("error", "Missing journeyId", "Provide ?journeyId=... in the URL.");
+					return;
+				}
+
+				const payload = {
+					mediaData: String(state.selectedImageDataUrl).split(",")[1],
+					userUUID: state.journeyId,
+					mimeType: "image/jpeg",
+					stepCode: "STEP3",
+					latitude: state.latitude,
+					longitude: state.longitude
+				};
+
+				const isOutreach = !!appSettings.isOutreachApplication;
+				const base = isOutreach ? appSettings.outreachBaseUrl || "" : appSettings.unassistedKycBaseUrl || "";
+				const path = isOutreach ? appSettings.saveMediaOutreachUrl || "/webhook/liveliness" : appSettings.saveMediaUrl || "/doc/liveness";
+				const url = buildUrl(base, path);
+
+				showSpinner(true, "Saving ...");
+				try {
+					const res = await fetch(url, { method: "PUT", headers: commonHeaders(), body: JSON.stringify(payload) });
+					const body = await res.json().catch(() => null);
+
+					// Angular logic: treat missing success / 302 without data as error
+					const ok = body && body.success && !(body.code === 302 && !body.data);
+					if (!ok) {
+						toast("error", body && (body.status || body.code || "Error"), body && body.message ? body.message : "Upload failed.");
+						state.selfieResponse = false;
+					} else {
+						state.selfieResponse = true;
+					}
+				} catch (e) {
+					console.error(e);
+					toast("error", "Error", "Upload failed.");
+					state.selfieResponse = false;
+				} finally {
+					showSpinner(false);
+					render();
+				}
+			}
+
+			function navigateToWhatsApp() {
+				const number = appSettings.isOutreachApplication
+					? appSettings.whatsAppRedirectMobileNumber || ""
+					: appSettings.defaultWhatsAppNumber || "9136693465";
+				window.location.href = "https://wa.me/" + encodeURIComponent(number);
+			}
+
+			function renderMeta() {
+				const parts = [];
+				if (state.latitude && state.longitude) parts.push(`Location: ${state.latitude}, ${state.longitude}`);
+				if (state.journeyId) parts.push(`journeyId: ${state.journeyId}`);
+				els.metaText.textContent = parts.join(" • ");
+			}
+
+			function render() {
+				const name = state.journeyData && state.journeyData.name ? titleCase(state.journeyData.name) : "";
+				els.helloText.textContent = name ? `Hello ${name}` : "Hello";
+
+				if (state.isMobile) {
+					els.hintText.style.display = "block";
+				} else {
+					els.hintText.style.display = "none";
+				}
+
+				renderMeta();
+
+				if (state.selfieResponse) {
+					els.screenCapture.style.display = "none";
+					els.screenSuccess.style.display = "block";
+					els.successText.textContent = appSettings.isOutreachApplication
+						? "Your selfie has been captured. We will notify you on WhatsApp once the upload is verified."
+						: `Congratulation ${name || ""}, Your photo has been uploaded successfully!`;
+					return;
+				}
+
+				els.screenCapture.style.display = "block";
+				els.screenSuccess.style.display = "none";
+
+				const hasImg = !!state.selectedImageDataUrl;
+				els.cameraBlock.style.display = hasImg ? "none" : "block";
+				els.previewBlock.style.display = hasImg ? "block" : "none";
+				if (hasImg) els.previewImg.src = state.selectedImageDataUrl;
+			}
+
+			function init() {
+				state.journeyId = qs("journeyId");
+				state.journeyToken = qs("UserToken");
+				state.isMobile = detectMobile();
+
+				els.btnCapture.addEventListener("click", captureImage);
+				els.btnRetake.addEventListener("click", retake);
+				els.btnSubmit.addEventListener("click", submit);
+				els.btnWhatsApp.addEventListener("click", navigateToWhatsApp);
+
+				render();
+				openCamera();
+				requestLocation();
+				getJourneyInfo();
+			}
+
+			init();
+		</script>
+	</body>
+</html>
